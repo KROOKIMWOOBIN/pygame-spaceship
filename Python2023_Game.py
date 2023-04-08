@@ -30,6 +30,10 @@ def crash(a,b):
             return False
     else: 
         return False
+    
+# 키 입력 정의
+def inputKey(key) :
+    1
         
 # 1. 게임 초기화
 pygame.init()
@@ -51,6 +55,8 @@ ss.change_size(80, 80)
 ss.x = round(size[0]/2) - ss.sx / 2
 ss.y = size[1] - ss.sy - 15
 ss.move = 10
+
+gun_sound = pygame.mixer.Sound("gun.mp3")
 
 black = (0,0,0)
 
@@ -134,9 +140,10 @@ while SB == 0:
         mm = imageManager()
         mm.put_img("총알.png")
         mm.change_size(20, 40)
+        gun_sound.play()
         mm.x = round(ss.x + ss.sx/2 - mm.sx/2) 
         mm.y = ss.y - mm.sy - 10  # 총알의 크기만큼 위로 올라가야함
-        mm.move = 15
+        mm.move = 10
         m_list.append(mm)
 
     k += 1 
@@ -208,7 +215,9 @@ while SB == 0:
         del m_list[d]
     
     for a in da_list:
-        del a_list[a]
+        if a >= 0 :
+            del a_list[a]
+        
         kill += 1 # 외계인이 사라지면 kill + 1
     
     
