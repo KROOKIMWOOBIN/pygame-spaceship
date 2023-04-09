@@ -73,9 +73,9 @@ k = 0
 kill = 0
 loss = 0
 
-a_list = []
- #b_list = [] 잡몹더만들다실패
-m_list = []
+a_list = [] # 잡몹1
+a2_list = [] # 잡몹2
+m_list = [] # 총알
 
 start_time = datetime.now()
 
@@ -159,23 +159,24 @@ while SB == 0:
     for d in d_list:
         del m_list[d]
     
-    # 외계인 등장
+    # 잡몹1
     if random.random() > 0.98:
         aa = imageManager()
         aa.put_img("잡몹1.png")
-        aa.change_size(50, 50)
+        aa.change_size(70, 70)
         aa.x = random.randrange(0, size[0] - aa.sx - round(ss.sx/2)) # 외계인의 크기만큼 빼줌
         aa.y = 10
         aa.move = 2
         a_list.append(aa)
-        
-        # bb = imageManager()       -- 잡몹더만들다실패 --
-        # bb.put_img("잡몹2.png")
-        # bb.change_size(50, 50)
-        # bb.x = random.randrange(0, size[0] - bb.sx - round(ss.sx/2)) # 외계인의 크기만큼 빼줌
-        # bb.y = 10
-        # bb.move = 1
-        # b_list.append(bb)           ---------------------
+    # 잡몹2
+    if random.random() > 0.99:
+        aa2 = imageManager()
+        aa2.put_img("잡몹2.png")
+        aa2.change_size(100, 100)
+        aa2.x = random.randrange(0, size[0] - aa.sx - round(ss.sx/2)) # 외계인의 크기만큼 빼줌
+        aa2.y = 10
+        aa2.move = 2
+        a_list.append(aa2)
         
     for i in range(len(a_list)):
         a = a_list[i]
@@ -183,14 +184,6 @@ while SB == 0:
         if a.y >= size[1]:
             d_list.append(i)
             loss += 1 # 외계인이 지나가면 loss + 1
-            
-    # for i in range(len( b_list)):  -- 잡몹더만들다실패 --
-    #     b = b_list[i]
-    #     b.y += b.move
-    #     if  b.y >= size[1]:
-    #         d_list.append(i)
-    #         loss += 1 # 외계인이 지나가면 loss + 1 ---------------
-            
     
     dd_list = []
     for d in dd_list:
