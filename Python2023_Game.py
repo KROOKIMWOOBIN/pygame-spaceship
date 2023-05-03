@@ -39,17 +39,13 @@ class hitEffect(imageManager):
 
 # 충돌 함수 정의
 def crash(a, b):
-    if (a.x - b.sx <= b.x) and (b.x <= a.x + a.sx):
-        if (a.y - b.sy <= b.y) and (b.y <= a.y + a.sy):
+    if (a.x + 25 - b.sx <= b.x) and (b.x <= a.x - 25 + a.sx):
+        if (a.y + 25 - b.sy <= b.y) and (b.y <= a.y - 25 + a.sy):
             return True
         else:
             return False
     else: 
         return False
-    
-# 키 입력 정의
-def inputKey(key) :
-    1
         
 # 1. 게임 초기화
 pygame.init()
@@ -60,8 +56,9 @@ screen = pygame.display.set_mode(size)
 rockimg = ['rock1.png', 'rock2.png']
 rock_list = []  # 운석 리스트 추가
 hit_effects = []  # 피격 효과 객체를 저장할 리스트 생성
-
 title = "미사일 게임"
+background1 = pygame.image.load("배경화면.png").convert_alpha()
+background1 = pygame.transform.scale(background1, (500, 1000))
  
 pygame.display.set_caption(title)
 
@@ -171,7 +168,7 @@ while SB == 0:
     if space_go == True and count % power == 0:
         mm = imageManager()
         mm.put_img("총알.png")
-        mm.change_size(20, 40)
+        mm.change_size(50, 100)
         gun_sound.play()
         mm.x = round(ss.x + ss.sx/2 - mm.sx/2) 
         mm.y = ss.y - mm.sy - 10  # 총알의 크기만큼 위로 올라가야함
@@ -195,11 +192,11 @@ while SB == 0:
     if random.random() > 0.98 :
         aa = imageManager()
         aa.put_img("잡몹1.png")
-        aa.change_size(50, 50)
+        aa.change_size(80, 100)
         aa.x = random.randrange(0, size[0] - aa.sx - round(ss.sx/2)) # 외계인의 크기만큼 빼줌
         aa.y = 10
         aa.move = 3
-        aa.hp = 1  # 체력을 3으로 설정
+        aa.hp = 2  # 체력을 2으로 설정
         a_list.append(aa)
     # 잡몹2
     if random.random() > 0.99 :
@@ -282,11 +279,13 @@ while SB == 0:
     da_list = list(set(da_list))  # 중복 제거
 
     for d in dm_list:
-        del m_list[d]
+        if d >= 0 :
+            del m_list[d]
     
     for a in da_list:
-        kill += 1 # 외계인이 사라지면 kill + 
-        del a_list[a]
+        if a >= 0 :
+            kill += 1 # 외계인이 사라지면 kill + 
+            del a_list[a]
     
     # 비행기 vs 외계인 충돌하면 죽음
     for i in range(len(a_list)):
@@ -295,11 +294,17 @@ while SB == 0:
             SB = 1
 
     # 비행기 아이템 파밍
+    ditem_list = []
+
     for i in range(len(item_list)) :
         item = item_list[i]
         item.y += item.move
         if crash(item, ss) == True :
             power = 10
+            ditem_list.append(i)
+
+    for i in ditem_list :
+        del item_list[i]
             
     if power == 10 :
         item_count += 1
@@ -310,6 +315,7 @@ while SB == 0:
     
     # 4-4. 그리기
     screen.fill(black)
+    screen.blit(background1, (0, 0))
     ss.show()
     for m in m_list:
         m.show()
