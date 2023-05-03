@@ -41,9 +41,11 @@ pygame.init()
 # 2. 게임창 옵션 설정
 size = [400, 900]
 screen = pygame.display.set_mode(size)
+rockimg = ['rock1.png', 'rock2.png']
+rock_list = []  # 운석 리스트 추가
 
 title = "미사일 게임"
-
+ 
 pygame.display.set_caption(title)
 
 # 3. 게임 내 필요한 설정
@@ -63,7 +65,7 @@ black = (0,0,0)
 left_go = False
 right_go = False
 space_go = False
-up_go = False
+up_go = False  
 down_go = False
 
 # 4. 메인 이벤트
@@ -79,6 +81,7 @@ m_list = [] # 총알
 
 start_time = datetime.now()
 
+ 
 while SB == 0:
 
     # 4-1. FPS 설정
@@ -173,11 +176,32 @@ while SB == 0:
         aa2 = imageManager()
         aa2.put_img("잡몹2.png")
         aa2.change_size(100, 100)
-        aa2.x = random.randrange(0, size[0] - aa.sx - round(ss.sx/2)) # 외계인의 크기만큼 빼줌
+        aa2.x = random.randrange(0, size[0] - aa2.sx - round(ss.sx/2)) # 외계인의 크기만큼 빼줌
         aa2.y = 10
         aa2.move = 2
         a_list.append(aa2)
-        
+    
+     # 운석 생성하기
+    if delta_time % 10 == 0 and not any(rock.y > 0 and rock.y < size[1] for rock in rock_list):
+        rock = imageManager()
+        rock.put_img(random.choice(rockimg))  # rockimg 배열에서 무작위 이미지 선택
+        rock.change_size(100, 100)
+        rock.x = random.randrange(0, size[0] - rock.sx)
+        rock.y = 10
+        rock.move = 5
+        rock_list.append(rock)
+
+     # 운석 이동하기
+    for rock in rock_list:
+        rock.y += rock.move
+        if rock.y > size[1]:
+            rock_list.remove(rock)
+
+    # 비행기와 운석 충돌 처리
+    for rock in rock_list:
+        if crash(rock, ss) == True:
+            SB = 1  # 게임 종료
+
     for i in range(len(a_list)):
         a = a_list[i]
         a.y += a.move
@@ -229,6 +253,8 @@ while SB == 0:
     for a in a_list:
         a.show()
     
+    for rock in rock_list:
+        rock.show()
     # 텍스트 그리기
     # font = pygame.font.Font("C:/Windows/Fonts/ariblk.ttf")
     font = pygame.font.Font("GulimChe-02.ttf", 20)
