@@ -20,6 +20,22 @@ class imageManager:
         self.sx, self.sy = self.image.get_size()
     def show(self):
         screen.blit(self.image, (self.x, self.y))
+    
+# 잡몹이 총알에 충돌시 나타나는 피격효과
+class hitEffect(imageManager):
+    def __init__(self, x, y):
+        super().__init__()
+        self.x = x
+        self.y = y
+        self.put_img("hit_effect.png")  # 피격 효과 이미지 로드
+        self.change_size(70, 70)  # 피격 효과 이미지 크기 조절
+        self.duration = 0.1 * 1000  # 효과 지속 시간 (0.3초)
+        self.start_time = pygame.time.get_ticks()  # 효과 시작 시간
+
+    def is_expired(self):
+        return pygame.time.get_ticks() - self.start_time >= self.duration
+
+
 
 # 충돌 함수 정의
 def crash(a,b):
@@ -43,6 +59,7 @@ size = [400, 900]
 screen = pygame.display.set_mode(size)
 rockimg = ['rock1.png', 'rock2.png']
 rock_list = []  # 운석 리스트 추가
+hit_effects = []  # 피격 효과 객체를 저장할 리스트 생성
 
 title = "미사일 게임"
  
@@ -114,6 +131,12 @@ while SB == 0:
                 up_go = False
             if event.key == pygame.K_DOWN:
                 down_go = False
+
+                # 피격 효과 제거 이벤트 처리
+        if event.type == pygame.USEREVENT + 2:
+            if len(hit_effects) > 0:
+                hit_effects.pop(0)
+
         
     # 4-3. 입력, 시간에 따른 변화
     now_time = datetime.now()
@@ -136,7 +159,9 @@ while SB == 0:
         if ss.y >= size[1] - ss.sy:
             ss.y = size[1] - ss.sy
 
-    
+    # 피격 효과 제거
+    hit_effects = [effect for effect in hit_effects if not effect.is_expired()]
+
     # 미사일 생성하기 
 
     if space_go == True and k % 30 == 0:
@@ -166,10 +191,11 @@ while SB == 0:
     if random.random() > 0.98:
         aa = imageManager()
         aa.put_img("잡몹1.png")
-        aa.change_size(70, 70)
+        aa.change_size(50, 50)
         aa.x = random.randrange(0, size[0] - aa.sx - round(ss.sx/2)) # 외계인의 크기만큼 빼줌
         aa.y = 10
         aa.move = 2
+        aa.hp = 3  # 체력을 3으로 설정
         a_list.append(aa)
     # 잡몹2
     if random.random() > 0.99:
@@ -179,8 +205,10 @@ while SB == 0:
         aa2.x = random.randrange(0, size[0] - aa2.sx - round(ss.sx/2)) # 외계인의 크기만큼 빼줌
         aa2.y = 10
         aa2.move = 2
+        aa2.hp = 3  # 체력을 3으로 설정
         a_list.append(aa2)
     
+
      # 운석 생성하기
     if delta_time % 10 == 0 and not any(rock.y > 0 and rock.y < size[1] for rock in rock_list):
         rock = imageManager()
@@ -221,18 +249,26 @@ while SB == 0:
         for j in range(len(a_list)):
             m = m_list[i]
             a = a_list[j]
-            if crash(m,a) == True:
+            if crash(m, a) == True:
                 dm_list.append(i)
-                da_list.append(j)
-                
-    dm_list = list(set(dm_list)) # 중복제거
-    da_list = list(set(da_list)) # 중복제거
-    
+                a.hp -= 1  # 외계인 체력 감소
+                if a.hp <= 0:  # 체력이 0 이하가 되면 외계인을 제거 리스트에 추가
+                    da_list.append(j)
+                    kill += 1  # 외계인이 사라지면 kill + 1
+                # 피격 효과 객체 생성
+                effect = hitEffect(a.x, a.y)
+                hit_effects.append(effect)
+                # 피격 효과를 일정 시간 후에 사라지게 하기 위한 타이머 이벤트 추가
+                pygame.time.set_timer(pygame.USEREVENT + 2, 200, True)
+
+    dm_list = list(set(dm_list))  # 중복 제거
+    da_list = list(set(da_list))  # 중복 제거
+
     for d in dm_list:
         del m_list[d]
-    
+
     for a in da_list:
-        if a >= 0 :
+        if a >= 0:
             del a_list[a]
         
         kill += 1 # 외계인이 사라지면 kill + 1
@@ -255,10 +291,14 @@ while SB == 0:
     
     for rock in rock_list:
         rock.show()
-    # 텍스트 그리기
+
+    for effect in hit_effects: 
+        effect.show()
+
+    # 텍스트 그리기  
     # font = pygame.font.Font("C:/Windows/Fonts/ariblk.ttf")
     font = pygame.font.Font("GulimChe-02.ttf", 20)
-    text_kill = font.render("kill : {} loss : {}". format(kill, loss), True, (255, 255, 0))  
+    text_kill = font.render("kill : {} ". format(kill), True, (255, 255, 0))  
     screen.blit(text_kill, (10, 5))
     
     text_time = font.render("time : {}". format(delta_time), True, (255, 255, 255))
