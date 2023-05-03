@@ -3,7 +3,7 @@ import random
 import time
 from datetime import datetime
 
-# 이미지 관리 클래스 정의
+# 이미지 관리 클래스 정의         
 class imageManager:
     def __init__(self):
         self.x = 0
@@ -38,30 +38,27 @@ class hitEffect(imageManager):
 
 
 # 충돌 함수 정의
-def crash(a,b):
-    if (a.x - b.sx <= b.x) and (b.x <= a.x + a.sx):
-        if (a.y - b.sy <= b.y) and (b.y <= a.y + a.sy):
+def crash(a, b):
+    if (a.x + 25 - b.sx <= b.x) and (b.x <= a.x - 25 + a.sx):
+        if (a.y + 25 - b.sy <= b.y) and (b.y <= a.y - 25 + a.sy):
             return True
         else:
             return False
     else: 
         return False
-    
-# 키 입력 정의
-def inputKey(key) :
-    1
         
 # 1. 게임 초기화
 pygame.init()
 
 # 2. 게임창 옵션 설정
-size = [400, 900]
+size = [500, 1000]
 screen = pygame.display.set_mode(size)
 rockimg = ['rock1.png', 'rock2.png']
 rock_list = []  # 운석 리스트 추가
 hit_effects = []  # 피격 효과 객체를 저장할 리스트 생성
-
 title = "미사일 게임"
+background1 = pygame.image.load("배경화면.png").convert_alpha()
+background1 = pygame.transform.scale(background1, (500, 1000))
  
 pygame.display.set_caption(title)
 
@@ -88,6 +85,9 @@ down_go = False
 # 4. 메인 이벤트
 SB = 0
 k = 0
+count = 0
+item_count = 0
+power = 30
 
 kill = 0
 loss = 0
@@ -95,6 +95,7 @@ loss = 0
 a_list = [] # 잡몹1
 a2_list = [] # 잡몹2
 m_list = [] # 총알
+item_list = [] # 아이템
 
 start_time = datetime.now()
 
@@ -103,7 +104,7 @@ while SB == 0:
 
     # 4-1. FPS 설정
     clock.tick(60) # 1초에 60번 while문 반복
-    
+    count += 1
     # 4-2. 각종 입력 감지 
     for event in pygame.event.get():# 키보드나 마우스의 동작을 받아옴
         if event.type == pygame.QUIT: # 게임 종료
@@ -164,10 +165,10 @@ while SB == 0:
 
     # 미사일 생성하기 
 
-    if space_go == True and k % 30 == 0:
+    if space_go == True and count % power == 0:
         mm = imageManager()
         mm.put_img("총알.png")
-        mm.change_size(20, 40)
+        mm.change_size(50, 100)
         gun_sound.play()
         mm.x = round(ss.x + ss.sx/2 - mm.sx/2) 
         mm.y = ss.y - mm.sy - 10  # 총알의 크기만큼 위로 올라가야함
@@ -188,17 +189,17 @@ while SB == 0:
         del m_list[d]
     
     # 잡몹1
-    if random.random() > 0.98:
+    if random.random() > 0.98 :
         aa = imageManager()
         aa.put_img("잡몹1.png")
-        aa.change_size(50, 50)
+        aa.change_size(80, 100)
         aa.x = random.randrange(0, size[0] - aa.sx - round(ss.sx/2)) # 외계인의 크기만큼 빼줌
         aa.y = 10
-        aa.move = 2
-        aa.hp = 3  # 체력을 3으로 설정
+        aa.move = 3
+        aa.hp = 2  # 체력을 2으로 설정
         a_list.append(aa)
     # 잡몹2
-    if random.random() > 0.99:
+    if random.random() > 0.99 :
         aa2 = imageManager()
         aa2.put_img("잡몹2.png")
         aa2.change_size(100, 100)
@@ -207,9 +208,17 @@ while SB == 0:
         aa2.move = 2
         aa2.hp = 3  # 체력을 3으로 설정
         a_list.append(aa2)
-    
+    # 아이템1
+    if count % 400 == 0 :
+        item1 = imageManager()
+        item1.put_img("부스트아이템.png")
+        item1.change_size(100, 100)
+        item1.x = random.randrange(0, size[0] - item1.sx - round(ss.sx/2)) # 외계인의 크기만큼 빼줌
+        item1.y = 10
+        item1.move = 5
+        item_list.append(item1)
 
-     # 운석 생성하기
+    # 운석 생성하기
     if delta_time % 10 == 0 and not any(rock.y > 0 and rock.y < size[1] for rock in rock_list):
         rock = imageManager()
         rock.put_img(random.choice(rockimg))  # rockimg 배열에서 무작위 이미지 선택
@@ -249,39 +258,64 @@ while SB == 0:
         for j in range(len(a_list)):
             m = m_list[i]
             a = a_list[j]
-            if crash(m, a) == True:
+            if crash(m, a) == True :
                 dm_list.append(i)
                 a.hp -= 1  # 외계인 체력 감소
                 if a.hp <= 0:  # 체력이 0 이하가 되면 외계인을 제거 리스트에 추가
                     da_list.append(j)
-                    kill += 1  # 외계인이 사라지면 kill + 1
                 # 피격 효과 객체 생성
                 effect = hitEffect(a.x, a.y)
                 hit_effects.append(effect)
                 # 피격 효과를 일정 시간 후에 사라지게 하기 위한 타이머 이벤트 추가
                 pygame.time.set_timer(pygame.USEREVENT + 2, 200, True)
 
+    for i in range(len(m_list)) :
+        m = m_list[i]
+        if crash(m, rock) :
+            m = m_list[i]
+            dm_list.append(i)
+
     dm_list = list(set(dm_list))  # 중복 제거
     da_list = list(set(da_list))  # 중복 제거
 
     for d in dm_list:
-        del m_list[d]
-
-    for a in da_list:
-        if a >= 0:
-            del a_list[a]
-        
-        kill += 1 # 외계인이 사라지면 kill + 1
+        if d >= 0 :
+            del m_list[d]
     
+    for a in da_list:
+        if a >= 0 :
+            kill += 1 # 외계인이 사라지면 kill + 
+            del a_list[a]
     
     # 비행기 vs 외계인 충돌하면 죽음
     for i in range(len(a_list)):
         a = a_list[i]
         if crash(a, ss) == True:
             SB = 1
+
+    # 비행기 아이템 파밍
+    ditem_list = []
+
+    for i in range(len(item_list)) :
+        item = item_list[i]
+        item.y += item.move
+        if crash(item, ss) == True :
+            power = 10
+            ditem_list.append(i)
+
+    for i in ditem_list :
+        del item_list[i]
+            
+    if power == 10 :
+        item_count += 1
+    
+    if item_count >= 100 :
+        power = 20
+        item_count = 0
     
     # 4-4. 그리기
     screen.fill(black)
+    screen.blit(background1, (0, 0))
     ss.show()
     for m in m_list:
         m.show()
@@ -294,6 +328,9 @@ while SB == 0:
 
     for effect in hit_effects: 
         effect.show()
+
+    for item in item_list :
+        item.show()
 
     # 텍스트 그리기  
     # font = pygame.font.Font("C:/Windows/Fonts/ariblk.ttf")
