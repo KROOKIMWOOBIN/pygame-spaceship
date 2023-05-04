@@ -196,7 +196,7 @@ while SB == 0:
         rock = imageManager()
         rock.put_img(random.choice(rockimg))  # rockimg 배열에서 무작위 이미지 선택
         rock.change_size(100, 100)
-        rock.x = random.randrange(0, size[0] - rock.sx)
+        rock.x = random.randrange(-rock.sx, size[0])
         rock.y = 10
         rock.move = 5
         rock_list.append(rock)
