@@ -85,8 +85,8 @@ down_go = False
 # 4. 메인 이벤트
 SB = 0
 count = 0
-item_count = 0
-power = 15
+item_count = 0 # 아이템 사용 시간
+power = 15 # 총알 속도
 
 kill = 0
 loss = 0
@@ -95,6 +95,7 @@ a_list = [] # 잡몹1
 a2_list = [] # 잡몹2
 m_list = [] # 총알
 item_list = [] # 아이템
+boss_list = [] # 보스
 
 start_time = datetime.now()
 
@@ -182,7 +183,7 @@ while SB == 0:
         aa2.hp = 3  # 체력을 3으로 설정
         a_list.append(aa2)
     # 아이템1
-    if count % 400 == 0 :
+    if count % 1000 == 0 :
         item1 = imageManager()
         item1.put_img("부스트아이템.png")
         item1.change_size(100, 100)
@@ -190,6 +191,16 @@ while SB == 0:
         item1.y = 10
         item1.move = 5
         item_list.append(item1)
+    # 보스1
+    if count == 10 :
+        boss1 = imageManager() 
+        boss1.put_img("보스1.png")
+        boss1.change_size(200, 200)
+        boss1.x = 0
+        boss1.y = 15
+        boss1.move = 0
+        boss1.hp = 100
+        boss_list.append(boss1)
 
     # 운석 생성하기
     if delta_time % 10 == 0 and not any(rock.y > 0 and rock.y < size[1] for rock in rock_list):
@@ -217,7 +228,6 @@ while SB == 0:
         a.y += a.move
         if a.y >= size[1]:
             d_list.append(i)
-            loss += 1 # 외계인이 지나가면 loss + 1
     
     dd_list = []
     for d in dd_list:
@@ -242,6 +252,26 @@ while SB == 0:
                 # 피격 효과를 일정 시간 후에 사라지게 하기 위한 타이머 이벤트 추가
                 pygame.time.set_timer(pygame.USEREVENT + 2, 200, True)
 
+    dboss_list = []
+
+    for i in range(len(boss_list)) :
+        b = boss_list[i]
+        b.x = ss.x - 100
+
+    for i in range(len(m_list)) :
+        for j in range(len(boss_list)) :
+            m = m_list[i]
+            b = boss_list[j]
+            if crash(m, b) == True :
+                dm_list.append(i)
+                b.hp -= 1
+                if b.hp <= 0 :
+                    dboss_list.append(j)
+                effect = hitEffect(a.x, a.y)
+                hit_effects.append(effect)
+                pygame.time.set_timer(pygame.USEREVENT + 2, 200, True)
+        
+
     for i in range(len(m_list)) :
         m = m_list[i]
         if crash(m, rock) :
@@ -259,6 +289,11 @@ while SB == 0:
         if a >= 0 :
             kill += 1 # 외계인이 사라지면 kill + 
             del a_list[a]
+
+    for b in dboss_list :
+        if b >= 0 :
+            del boss_list[b]
+
     
     # 비행기 vs 외계인 충돌하면 죽음
     for i in range(len(a_list)):
@@ -278,14 +313,15 @@ while SB == 0:
 
     for i in ditem_list :
         del item_list[i]
-            
+
+    # 아이템 파워가 10일 때 아이템 카운트 증가     
     if power == 10 :
         item_count += 1
-    
+    # 아이템 카운트가 100이 됐을 때 원래대로 파워가 돌아감
     if item_count >= 100 :
-        power = 20
+        power = 15
         item_count = 0
-    
+
     # 4-4. 그리기
     screen.fill(black)
     screen.blit(background1, (0, 0))
@@ -304,6 +340,9 @@ while SB == 0:
 
     for item in item_list :
         item.show()
+
+    for boss in boss_list :
+        boss.show()
 
     # 텍스트 그리기  
     # font = pygame.font.Font("C:/Windows/Fonts/ariblk.ttf")
