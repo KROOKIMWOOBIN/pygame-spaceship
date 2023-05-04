@@ -67,7 +67,7 @@ clock = pygame.time.Clock() # FPS를 위한 변수
 
 ss = imageManager()
 ss.put_img("비행선.png")
-ss.change_size(80, 80)
+ss.change_size(31.5, 54.3)
 ss.x = round(size[0]/2) - ss.sx / 2
 ss.y = size[1] - ss.sy - 15
 ss.move = 10
@@ -84,10 +84,9 @@ down_go = False
 
 # 4. 메인 이벤트
 SB = 0
-k = 0
 count = 0
 item_count = 0
-power = 30
+power = 15
 
 kill = 0
 loss = 0
@@ -109,57 +108,32 @@ while SB == 0:
     for event in pygame.event.get():# 키보드나 마우스의 동작을 받아옴
         if event.type == pygame.QUIT: # 게임 종료
             SB = 1
-        if event.type == pygame.KEYDOWN: # 키가 눌렸을 때
-            if event.key == pygame.K_LEFT: # 키가 왼쪽키이면 
-                left_go = True
-            if event.key == pygame.K_RIGHT:
-                right_go = True
-            if event.key == pygame.K_SPACE:
-                space_go = True
-                k = 0
-            if event.key == pygame.K_UP:
-                up_go = True
-            if event.key == pygame.K_DOWN:
-                down_go = True
-        elif event.type == pygame.KEYUP:
-            if event.key == pygame.K_LEFT:
-                left_go = False
-            if event.key == pygame.K_RIGHT:
-                right_go = False  
-            if event.key == pygame.K_SPACE:
-                space_go = False
-            if event.key == pygame.K_UP:
-                up_go = False
-            if event.key == pygame.K_DOWN:
-                down_go = False
+            
+    # 키 입력 확인
+    keys = pygame.key.get_pressed()
 
-                # 피격 효과 제거 이벤트 처리
-        if event.type == pygame.USEREVENT + 2:
-            if len(hit_effects) > 0:
-                hit_effects.pop(0)
+    # 비행선 위치 이동
+    ss.x += ss.move * (keys[pygame.K_RIGHT] - keys[pygame.K_LEFT])
+    ss.y += ss.move * (keys[pygame.K_DOWN] - keys[pygame.K_UP])
+
+    # 밖으로 못 나가게
+    ss.x = max(min(ss.x, size[0] - ss.sx), 0)
+    ss.y = max(min(ss.y, size[1] - ss.sy), 0)
+            
+    # 총알 나가기
+    if keys[pygame.K_SPACE]:
+        space_go = True
+    
+    # 피격 효과 제거 이벤트 처리
+    if event.type == pygame.USEREVENT + 2:
+        if len(hit_effects) > 0:
+            hit_effects.pop(0)
 
         
     # 4-3. 입력, 시간에 따른 변화
     now_time = datetime.now()
     delta_time = round((now_time - start_time).total_seconds())
     
-    if left_go == True:
-        ss.x -= ss.move
-        if ss.x <= 0:
-            ss.x = 0
-    elif right_go == True:
-        ss.x += ss.move
-        if ss.x >= size[0] - ss.sx:
-            ss.x = size[0] - ss.sx
-    elif up_go == True:
-        ss.y -= ss.move
-        if ss.y <= 0:
-            ss.y = 0
-    elif down_go == True:
-        ss.y += ss.move
-        if ss.y >= size[1] - ss.sy:
-            ss.y = size[1] - ss.sy
-
     # 피격 효과 제거
     hit_effects = [effect for effect in hit_effects if not effect.is_expired()]
 
@@ -174,8 +148,6 @@ while SB == 0:
         mm.y = ss.y - mm.sy - 10  # 총알의 크기만큼 위로 올라가야함
         mm.move = 10
         m_list.append(mm)
-
-    k += 1 
     
     # 화면에서 나간 미사일 지우기 
     d_list = []
@@ -186,7 +158,8 @@ while SB == 0:
             d_list.append(i)
     
     for d in d_list:
-        del m_list[d]
+        if d < len(m_list) :
+            del m_list[d]
     
     # 잡몹1
     if random.random() > 0.98 :
@@ -279,7 +252,7 @@ while SB == 0:
     da_list = list(set(da_list))  # 중복 제거
 
     for d in dm_list:
-        if d >= 0 :
+        if d < len(m_list) :
             del m_list[d]
     
     for a in da_list:
