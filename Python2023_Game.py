@@ -64,7 +64,7 @@ pygame.display.set_caption(title)
 
 # 3. 게임 내 필요한 설정
 clock = pygame.time.Clock() # FPS를 위한 변수
-
+bhp = 0 # 보스 피
 ss = imageManager()
 ss.put_img("비행선.png")
 ss.change_size(31.5, 54.3)
@@ -73,6 +73,7 @@ ss.y = size[1] - ss.sy - 15
 ss.move = 10
 
 gun_sound = pygame.mixer.Sound("gun.mp3")
+font = pygame.font.Font("GulimChe-02.ttf", 20)
 
 black = (0,0,0)
 
@@ -192,14 +193,15 @@ while SB == 0:
         item1.move = 5
         item_list.append(item1)
     # 보스1
-    if count == 10 :
+    if count == 10 : # 보스 생성시간 수정해야 됨
         boss1 = imageManager() 
         boss1.put_img("보스1.png")
         boss1.change_size(200, 200)
         boss1.x = 0
-        boss1.y = 15
+        boss1.y = 40
         boss1.move = 0
         boss1.hp = 100
+        bhp = boss1.hp
         boss_list.append(boss1)
 
     # 운석 생성하기
@@ -252,25 +254,28 @@ while SB == 0:
                 # 피격 효과를 일정 시간 후에 사라지게 하기 위한 타이머 이벤트 추가
                 pygame.time.set_timer(pygame.USEREVENT + 2, 200, True)
 
-    dboss_list = []
+    dboss_list = [] # 보스 삭제 리스트
 
-    for i in range(len(boss_list)) :
-        b = boss_list[i]
-        b.x = ss.x - 100
+    for i in range(len(boss_list)) : 
+        b = boss_list[i] 
+        b.x = ss.x - 100 # 보스 좌우 좌표는 비행선이랑 동일
 
     for i in range(len(m_list)) :
         for j in range(len(boss_list)) :
             m = m_list[i]
             b = boss_list[j]
+                  
             if crash(m, b) == True :
                 dm_list.append(i)
                 b.hp -= 1
-                if b.hp <= 0 :
+                bhp = b.hp
+                if b.hp <= 0 : # 보스 피가 0이 될 때 까지
                     dboss_list.append(j)
                 effect = hitEffect(a.x, a.y)
                 hit_effects.append(effect)
                 pygame.time.set_timer(pygame.USEREVENT + 2, 200, True)
-        
+
+
 
     for i in range(len(m_list)) :
         m = m_list[i]
@@ -317,8 +322,8 @@ while SB == 0:
     # 아이템 파워가 10일 때 아이템 카운트 증가     
     if power == 10 :
         item_count += 1
-    # 아이템 카운트가 100이 됐을 때 원래대로 파워가 돌아감
-    if item_count >= 100 :
+    # 아이템 카운트가 200이 됐을 때 원래대로 파워가 돌아감
+    if item_count >= 200 :
         power = 15
         item_count = 0
 
@@ -346,13 +351,15 @@ while SB == 0:
 
     # 텍스트 그리기  
     # font = pygame.font.Font("C:/Windows/Fonts/ariblk.ttf")
-    font = pygame.font.Font("GulimChe-02.ttf", 20)
     text_kill = font.render("kill : {} ". format(kill), True, (255, 255, 0))  
     screen.blit(text_kill, (10, 5))
     
     text_time = font.render("time : {}". format(delta_time), True, (255, 255, 255))
     screen.blit(text_time, (size[0]-100, 5))
-    
+    if bhp >= 1 :
+        boss_hp = font.render("boss : {} ". format(bhp), True, (255, 255, 0))  
+        screen.blit(boss_hp, (size[0]/4, 5))
+
     # 4-5. 업데이트
     pygame.display.flip()
     
