@@ -150,7 +150,17 @@ while SB == 0:
         mm.y = ss.y - mm.sy - 10  # 총알의 크기만큼 위로 올라가야함
         mm.move = 10
         m_list.append(mm)
-    
+
+    #if count % 2 == 0 and boss_list >= 0 : # 보스 미사일
+        #bm = imageManager()
+        #bm.put_img("총알.png")
+        #bm.change_size(50, 100)
+        #bm.x = ss.x - 100
+        #bm.y = 0
+        #bm.move = 10
+        #m_list.append(bm)
+
+
     # 화면에서 나간 미사일 지우기 
     d_list = []
     for i in range(len(m_list)):
@@ -197,7 +207,7 @@ while SB == 0:
         boss1 = imageManager() 
         boss1.put_img("보스1.png")
         boss1.change_size(200, 200)
-        boss1.x = 0
+        boss1.x = size[0]/4
         boss1.y = 40
         boss1.move = 0
         boss1.hp = 100
@@ -258,18 +268,19 @@ while SB == 0:
 
     for i in range(len(boss_list)) : 
         b = boss_list[i] 
-        b.x = ss.x - 100 # 보스 좌우 좌표는 비행선이랑 동일
 
     for i in range(len(m_list)) :
         for j in range(len(boss_list)) :
             m = m_list[i]
             b = boss_list[j]
+            b.x = ss.x - 100
                   
             if crash(m, b) == True :
                 dm_list.append(i)
                 b.hp -= 1
                 bhp = b.hp
                 if b.hp <= 0 : # 보스 피가 0이 될 때 까지
+                    kill *= 2
                     dboss_list.append(j)
                 effect = hitEffect(a.x, a.y)
                 hit_effects.append(effect)
