@@ -39,8 +39,8 @@ class hitEffect(imageManager):
 
 # 충돌 함수 정의
 def crash(a, b):
-    if (a.x + 25 - b.sx <= b.x) and (b.x <= a.x - 25 + a.sx):
-        if (a.y + 25 - b.sy <= b.y) and (b.y <= a.y - 25 + a.sy):
+    if (a.x - b.sx <= b.x) and (b.x <= a.x + a.sx):
+        if (a.y - b.sy <= b.y) and (b.y <= a.y + a.sy):
             return True
         else:
             return False
@@ -57,8 +57,7 @@ rockimg = ['rock1.png', 'rock2.png']
 rock_list = []  # 운석 리스트 추가
 hit_effects = []  # 피격 효과 객체를 저장할 리스트 생성
 title = "미사일 게임"
-background1 = pygame.image.load("배경화면.png").convert_alpha()
-background1 = pygame.transform.scale(background1, (500, 1000))
+background1 = pygame.image.load("스테이지1.png").convert_alpha()
  
 pygame.display.set_caption(title)
 
@@ -97,11 +96,12 @@ a2_list = [] # 잡몹2
 m_list = [] # 총알
 item_list = [] # 아이템
 boss_list = [] # 보스
-
+bm_list = [] # 보스 총알
 start_time = datetime.now()
 
- 
 while SB == 0:
+
+    background1 = pygame.transform.scale(background1, (500, 1000))
 
     # 4-1. FPS 설정
     clock.tick(60) # 1초에 60번 while문 반복
@@ -150,7 +150,33 @@ while SB == 0:
         mm.y = ss.y - mm.sy - 10  # 총알의 크기만큼 위로 올라가야함
         mm.move = 10
         m_list.append(mm)
-    
+
+    # 보스 총알
+    for boss in boss_list:
+        if count % 100 == 0: 
+            mm = imageManager()
+            mm.put_img("총알.png") 
+            mm.change_size(50, 100)
+            mm.x = round(boss.x + boss.sx/2 - mm.sx/2) 
+            mm.y = boss.y + boss.sy + 10 
+            mm.move = 5
+            bm_list.append(mm)
+
+    # Boss 총알 이동하기
+    dbm_list = []  # 보스 총알 삭제 리스트
+    for i in range(len(bm_list)):
+        bm = bm_list[i]
+        bm.y += bm.move
+        if bm.y > size[1]:
+            dbm_list.append(i)
+
+    dbm_list = list(set(dbm_list))  # 중복 제거
+
+    for d in dbm_list:
+        if d < len(bm_list):
+            del bm_list[d]
+
+
     # 화면에서 나간 미사일 지우기 
     d_list = []
     for i in range(len(m_list)):
@@ -159,12 +185,8 @@ while SB == 0:
         if m.y < -m.sy:
             d_list.append(i)
     
-    for d in d_list:
-        if d < len(m_list) :
-            del m_list[d]
-    
     # 잡몹1
-    if random.random() > 0.98 :
+    if random.random() > 0.97 :
         aa = imageManager()
         aa.put_img("잡몹1.png")
         aa.change_size(80, 100)
@@ -172,9 +194,10 @@ while SB == 0:
         aa.y = 10
         aa.move = 3
         aa.hp = 2  # 체력을 2으로 설정
-        a_list.append(aa)
+        if not any(crash(aa, obj) for obj in [ss] + m_list + a_list + item_list + boss_list):
+            a_list.append(aa)
     # 잡몹2
-    if random.random() > 0.99 :
+    if random.random() > 0.98 :
         aa2 = imageManager()
         aa2.put_img("잡몹2.png")
         aa2.change_size(100, 100)
@@ -182,7 +205,8 @@ while SB == 0:
         aa2.y = 10
         aa2.move = 2
         aa2.hp = 3  # 체력을 3으로 설정
-        a_list.append(aa2)
+        if not any(crash(rock, obj) for obj in [ss] + m_list + a_list + item_list + boss_list):
+            a_list.append(aa2)
     # 아이템1
     if count % 1000 == 0 :
         item1 = imageManager()
@@ -193,16 +217,17 @@ while SB == 0:
         item1.move = 5
         item_list.append(item1)
     # 보스1
-    if count == 10 : # 보스 생성시간 수정해야 됨
+    if count == 1000 : # 보스 생성시간 수정해야 됨
         boss1 = imageManager() 
         boss1.put_img("보스1.png")
         boss1.change_size(200, 200)
-        boss1.x = 0
+        boss1.x = size[0]/4
         boss1.y = 40
         boss1.move = 0
         boss1.hp = 100
         bhp = boss1.hp
         boss_list.append(boss1)
+        background1 = pygame.image.load("스테이지2.png").convert_alpha()
 
     # 운석 생성하기
     if delta_time % 10 == 0 and not any(rock.y > 0 and rock.y < size[1] for rock in rock_list):
@@ -219,6 +244,10 @@ while SB == 0:
         rock.y += rock.move
         if rock.y > size[1]:
             rock_list.remove(rock)
+
+    for bm in bm_list:
+        if crash(bm, ss) == True:
+            SB = 1  # 게임 종료
 
     # 비행기와 운석 충돌 처리
     for rock in rock_list:
@@ -258,24 +287,23 @@ while SB == 0:
 
     for i in range(len(boss_list)) : 
         b = boss_list[i] 
-        b.x = ss.x - 100 # 보스 좌우 좌표는 비행선이랑 동일
 
     for i in range(len(m_list)) :
         for j in range(len(boss_list)) :
             m = m_list[i]
             b = boss_list[j]
+            b.x = ss.x - 100
                   
             if crash(m, b) == True :
                 dm_list.append(i)
                 b.hp -= 1
                 bhp = b.hp
                 if b.hp <= 0 : # 보스 피가 0이 될 때 까지
+                    kill *= 2
                     dboss_list.append(j)
                 effect = hitEffect(a.x, a.y)
                 hit_effects.append(effect)
                 pygame.time.set_timer(pygame.USEREVENT + 2, 200, True)
-
-
 
     for i in range(len(m_list)) :
         m = m_list[i]
@@ -298,7 +326,6 @@ while SB == 0:
     for b in dboss_list :
         if b >= 0 :
             del boss_list[b]
-
     
     # 비행기 vs 외계인 충돌하면 죽음
     for i in range(len(a_list)):
@@ -348,6 +375,9 @@ while SB == 0:
 
     for boss in boss_list :
         boss.show()
+
+    for bm in bm_list :
+        bm.show()
 
     # 텍스트 그리기  
     # font = pygame.font.Font("C:/Windows/Fonts/ariblk.ttf")
