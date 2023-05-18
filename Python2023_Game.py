@@ -3,6 +3,8 @@ import random
 import time
 from datetime import datetime
 
+laser_size = [6, 36]
+
 # 이미지 관리 클래스 정의         
 class imageManager:
     def __init__(self):
@@ -23,18 +25,25 @@ class imageManager:
     
 # 잡몹이 총알에 충돌시 나타나는 피격효과
 class hitEffect(imageManager):
-    def __init__(self, x, y):
+    def __init__(self, entity_position, entity_size):
         super().__init__()
+        
+        min_x = entity_position[0]
+        max_x = entity_position[0] + entity_size[0] - laser_size[0]
+        x = random.uniform(min_x, max_x)
+        min_y = entity_position[1]
+        max_y = entity_position[1] + entity_size[1] - laser_size[1]
+        y = random.uniform(min_y, max_y)
+        
         self.x = x
         self.y = y
         self.put_img("hit_effect.png")  # 피격 효과 이미지 로드
-        self.change_size(70, 70)  # 피격 효과 이미지 크기 조절
+        self.change_size(laser_size[0], laser_size[1])  # 피격 효과 이미지 크기 조절
         self.duration = 0.1 * 1000  # 효과 지속 시간 (0.3초)
         self.start_time = pygame.time.get_ticks()  # 효과 시작 시간
 
     def is_expired(self):
         return pygame.time.get_ticks() - self.start_time >= self.duration
-
 
 
 # 충돌 함수 정의
@@ -92,11 +101,13 @@ kill = 0
 loss = 0
 
 a_list = [] # 잡몹1
+a_size = [80, 100]
 a2_list = [] # 잡몹2
 m_list = [] # 총알
 item_list = [] # 아이템
 boss_list = [] # 보스
 bm_list = [] # 보스 총알
+boss_size = [200, 200]
 start_time = datetime.now()
 
 while SB == 0:
@@ -144,7 +155,7 @@ while SB == 0:
     if space_go == True and count % power == 0:
         mm = imageManager()
         mm.put_img("총알.png")
-        mm.change_size(50, 100)
+        mm.change_size(laser_size[0], laser_size[1])
         gun_sound.play()
         mm.x = round(ss.x + ss.sx/2 - mm.sx/2) 
         mm.y = ss.y - mm.sy - 10  # 총알의 크기만큼 위로 올라가야함
@@ -220,7 +231,7 @@ while SB == 0:
     if count == 1000 : # 보스 생성시간 수정해야 됨
         boss1 = imageManager() 
         boss1.put_img("보스1.png")
-        boss1.change_size(200, 200)
+        boss1.change_size(boss_size[0], boss_size[1])
         boss1.x = size[0]/4
         boss1.y = 40
         boss1.move = 0
@@ -272,13 +283,13 @@ while SB == 0:
         for j in range(len(a_list)):
             m = m_list[i]
             a = a_list[j]
-            if crash(m, a) == True :
+            if crash(m, a) :
                 dm_list.append(i)
                 a.hp -= 1  # 외계인 체력 감소
                 if a.hp <= 0:  # 체력이 0 이하가 되면 외계인을 제거 리스트에 추가
                     da_list.append(j)
                 # 피격 효과 객체 생성
-                effect = hitEffect(a.x, a.y)
+                effect = hitEffect([a.x, a.y], a_size)
                 hit_effects.append(effect)
                 # 피격 효과를 일정 시간 후에 사라지게 하기 위한 타이머 이벤트 추가
                 pygame.time.set_timer(pygame.USEREVENT + 2, 200, True)
@@ -286,8 +297,10 @@ while SB == 0:
     dboss_list = [] # 보스 삭제 리스트
 
     for i in range(len(boss_list)) : 
-        b = boss_list[i] 
+        b = boss_list[i]
 
+    
+    # 보스 피격 
     for i in range(len(m_list)) :
         for j in range(len(boss_list)) :
             m = m_list[i]
@@ -301,7 +314,7 @@ while SB == 0:
                 if b.hp <= 0 : # 보스 피가 0이 될 때 까지
                     kill *= 2
                     dboss_list.append(j)
-                effect = hitEffect(a.x, a.y)
+                effect = hitEffect([b.x, b.y], boss_size)
                 hit_effects.append(effect)
                 pygame.time.set_timer(pygame.USEREVENT + 2, 200, True)
 
@@ -367,9 +380,6 @@ while SB == 0:
     for rock in rock_list:
         rock.show()
 
-    for effect in hit_effects: 
-        effect.show()
-
     for item in item_list :
         item.show()
 
@@ -378,6 +388,8 @@ while SB == 0:
 
     for bm in bm_list :
         bm.show()
+    for effect in hit_effects: 
+        effect.show()
 
     # 텍스트 그리기  
     # font = pygame.font.Font("C:/Windows/Fonts/ariblk.ttf")
