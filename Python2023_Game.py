@@ -1,7 +1,9 @@
 import pygame
 import random
 import time
+import sys
 from datetime import datetime
+
 
 # 소스 디렉터리
 DIRIMG = "img/"
@@ -135,8 +137,38 @@ class Element:
     def check_screen(self):
         self.rect.x = max(min(self.rect.x, size[0] - self.rect.width), 0)
         self.rect.y = max(min(self.rect.y, size[1] - self.rect.height), 0)
-
+# 게임 종료 메시지 출력 후 종료
+def show_message(message):
+    font = pygame.font.Font(None, 50)
+    text_lines = message.split('\n')  # 텍스트를 여러 줄로 분할
+    
+    line_height = font.get_linesize()
+    y = size[1] // 2 - line_height * len(text_lines) // 2  # 텍스트를 세로 중앙 정렬하기 위한 시작 Y 좌표 계산
+    
+    for line in text_lines:
+        text = font.render(line, True, (255, 255, 255))
+        text_rect = text.get_rect(center=(size[0] // 2, y))
+        screen.blit(text, text_rect)
+        y += line_height  # 다음 줄로 이동
         
+    pygame.display.flip()
+    time.sleep(3)
+
+# 게임 시작 전에 3초의 시작 카운트 다운을 보여주는 함수
+def show_countdown():
+    font = pygame.font.Font(None, 100)
+
+    for i in range(3, 0, -1):
+        screen.fill(black)
+        text = font.render(str(i), True, (255, 255, 255))
+        text_rect = text.get_rect(center=(size[0] // 2, size[1] // 2))
+        screen.blit(text, text_rect)
+        pygame.display.flip()
+        time.sleep(1)
+
+    screen.fill(black)
+    pygame.display.flip()
+
 playing = 0
 count = 0
 item_count = 0 # 아이템 사용 시간
@@ -176,9 +208,12 @@ item_speed = 10
 
 # 시작 시
 start_time = datetime.now()
+# 카운트 다운
+show_countdown()
 
-while playing == 0:
-    
+while True:
+
+
     for event in pygame.event.get(): # 키보드나 마우스의 동작을 받아옴
         if event.type == pygame.QUIT: # 게임 종료
             playing = 1
@@ -190,7 +225,6 @@ while playing == 0:
         STAGE += 1
             
     background = pygame.transform.scale(background, (500, 1000))
-
             
     # 키 입력 확인
     keys = pygame.key.get_pressed()
@@ -287,8 +321,6 @@ while playing == 0:
         for bm in bm_list:
             if (bm.rect.colliderect(player.rect)):
                 playing = 1
-
-    
                 
     # 몬스터 이동
     a_list = [monster for monster in a_list if monster.rect.y + monster_speed < size[1]]
@@ -321,7 +353,7 @@ while playing == 0:
 
     
                 
-    # 비행기 vs 외계인 충돌하면 죽음
+    # 비행기 충돌시 게임 종료
     for i in a_list + boss_list + rock_list:
         if i.rect.colliderect(player.rect):
             playing = 1
@@ -348,7 +380,7 @@ while playing == 0:
 
     # 4-4. 그리기
     screen.fill(black)
-    
+
     bg_y += 1
     if bg_y >= 600:
         bg_y = 0
@@ -376,7 +408,13 @@ while playing == 0:
     count += 1
     score += 0.01
     laser_delay -= 1 if laser_delay != 0 else 0
-    
+
+    if playing:
+        screen.fill((0, 0, 0))
+        show_message("Game End\n Score : %d"% round(score))
+        pygame.quit()
+        sys.exit()
+
     # 업데이트
     pygame.display.flip()
     
