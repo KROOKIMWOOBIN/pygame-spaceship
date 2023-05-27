@@ -141,18 +141,26 @@ class Element:
 def show_message(message):
     font = pygame.font.Font(None, 50)
     text_lines = message.split('\n')  # 텍스트를 여러 줄로 분할
-    
+
     line_height = font.get_linesize()
     y = size[1] // 2 - line_height * len(text_lines) // 2  # 텍스트를 세로 중앙 정렬하기 위한 시작 Y 좌표 계산
-    
+
     for line in text_lines:
         text = font.render(line, True, (255, 255, 255))
         text_rect = text.get_rect(center=(size[0] // 2, y))
         screen.blit(text, text_rect)
         y += line_height  # 다음 줄로 이동
-        
+
     pygame.display.flip()
-    time.sleep(3)
+
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_RETURN:
+                    return
+
+        pygame.display.update()
+
 
 # 게임 시작 전에 3초의 시작 카운트 다운을 보여주는 함수
 def show_countdown():
@@ -168,6 +176,13 @@ def show_countdown():
 
     screen.fill(black)
     pygame.display.flip()
+
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_RETURN:
+                    return
+
 
 playing = 0
 count = 0
