@@ -17,6 +17,7 @@ size = [450, 800]
 screen = pygame.display.set_mode(size)
 title = "미사일 게임"
 stage_img = ['stage01.png', 'stage02.png']
+Sep = ['startpage.gif', 'endpage.gif']
 
 background = pygame.image.load(DIRIMG + stage_img[0]).convert_alpha()
 bg_y = 0
@@ -137,20 +138,16 @@ class Element:
     def check_screen(self):
         self.rect.x = max(min(self.rect.x, size[0] - self.rect.width), 0)
         self.rect.y = max(min(self.rect.y, size[1] - self.rect.height), 0)
-# 게임 종료 메시지 출력 후 종료
-def show_message(message):
-    font = pygame.font.Font(None, 50)
-    text_lines = message.split('\n')  # 텍스트를 여러 줄로 분할
+# 게임 종료 후 로비
+def EndPage():
+    pygame.init()
+    screen = pygame.display.set_mode(size)
 
-    line_height = font.get_linesize()
-    y = size[1] // 2 - line_height * len(text_lines) // 2  # 텍스트를 세로 중앙 정렬하기 위한 시작 Y 좌표 계산
+    image_path = DIRIMG + Sep[1]
+    image = pygame.image.load(image_path)
+    image_rect = image.get_rect(center=(screen.get_width() // 2, screen.get_height() // 2))
 
-    for line in text_lines:
-        text = font.render(line, True, (255, 255, 255))
-        text_rect = text.get_rect(center=(size[0] // 2, y))
-        screen.blit(text, text_rect)
-        y += line_height  # 다음 줄로 이동
-
+    screen.blit(image, image_rect)
     pygame.display.flip()
 
     while True:
@@ -162,19 +159,13 @@ def show_message(message):
         pygame.display.update()
 
 
-# 게임 시작 전에 3초의 시작 카운트 다운을 보여주는 함수
-def show_countdown():
+# 게임 시작 전 로비
+def StartPage():
     font = pygame.font.Font(None, 100)
-
-    for i in range(3, 0, -1):
-        screen.fill(black)
-        text = font.render(str(i), True, (255, 255, 255))
-        text_rect = text.get_rect(center=(size[0] // 2, size[1] // 2))
-        screen.blit(text, text_rect)
-        pygame.display.flip()
-        time.sleep(1)
+    image = pygame.image.load(DIRIMG + Sep[0]).convert_alpha()
 
     screen.fill(black)
+    screen.blit(image, (0, 0)) 
     pygame.display.flip()
 
     while True:
@@ -224,10 +215,9 @@ item_speed = 10
 # 시작 시
 start_time = datetime.now()
 # 카운트 다운
-show_countdown()
+StartPage()
 
 while True:
-
 
     for event in pygame.event.get(): # 키보드나 마우스의 동작을 받아옴
         if event.type == pygame.QUIT: # 게임 종료
@@ -426,7 +416,7 @@ while True:
 
     if playing:
         screen.fill((0, 0, 0))
-        show_message("Game End\n Score : %d"% round(score))
+        EndPage()
         pygame.quit()
         sys.exit()
 
