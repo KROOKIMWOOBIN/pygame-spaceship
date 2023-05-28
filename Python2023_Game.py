@@ -13,7 +13,7 @@ DIRSRC = "source/"
 pygame.init()
 
 # 2. 게임창 옵션 설정
-size = [500, 1000]
+size = [450, 800]
 screen = pygame.display.set_mode(size)
 title = "미사일 게임"
 stage_img = ['stage01.png', 'stage02.png']
