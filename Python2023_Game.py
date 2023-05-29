@@ -8,6 +8,7 @@ from datetime import datetime
 # 소스 디렉터리
 DIRIMG = "img/"
 DIRSRC = "source/"
+BUTTONSRC = "pressbutton/"
         
 # 1. 게임 초기화
 pygame.init()
@@ -17,7 +18,9 @@ size = [450, 800]
 screen = pygame.display.set_mode(size)
 title = "미사일 게임"
 stage_img = ['stage01.png', 'stage02.png']
-Sep = ['startpage.gif', 'endpage.gif']
+startpage = 'startpage.png'
+end_message_img = 'endpage'
+end_message_img_size = 5
 
 background = pygame.image.load(DIRIMG + stage_img[0]).convert_alpha()
 bg_y = 0
@@ -138,42 +141,80 @@ class Element:
     def check_screen(self):
         self.rect.x = max(min(self.rect.x, size[0] - self.rect.width), 0)
         self.rect.y = max(min(self.rect.y, size[1] - self.rect.height), 0)
+        
 # 게임 종료 후 로비
 def EndPage():
-    pygame.init()
-    screen = pygame.display.set_mode(size)
-
-    image_path = DIRIMG + Sep[1]
-    image = pygame.image.load(image_path)
-    image_rect = image.get_rect(center=(screen.get_width() // 2, screen.get_height() // 2))
-
-    screen.blit(image, image_rect)
-    pygame.display.flip()
-
+    imglist = 1
+    current_time = pygame.time.get_ticks()
+    stt = 1
+    image_path = DIRIMG + BUTTONSRC + end_message_img + ('0' if len(str(imglist)) == 1 else '') + str(imglist) + '.png'
+    imglist = 2
+    bg_y = 0
+    
     while True:
+        now_time = pygame.time.get_ticks() - current_time 
+        screen.fill(black)
+        screen.blit(background, (0, bg_y))
+        screen.blit(background, (0, bg_y - size[1]))
+        bg_y += 1
+        if bg_y >= size[1]:
+            bg_y = 0
+            
+        if now_time >= 200:
+            current_time = pygame.time.get_ticks()
+            image_path = DIRIMG + BUTTONSRC + end_message_img + ('0' if len(str(imglist)) == 1 else '') + str(imglist) + '.png'
+            if imglist == end_message_img_size or (imglist == 1 and stt == -1):
+                stt *= -1
+        
+            imglist += stt
+            
+        image = pygame.image.load(image_path)
+        image_rect = image.get_rect(center=(screen.get_width() // 2, screen.get_height() // 2 + 300))
+        screen.blit(image, image_rect)
+        
+        pygame.display.flip()
         for event in pygame.event.get():
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_RETURN:
                     return
-
-        pygame.display.update()
+                
+        clock.tick(60)
 
 
 # 게임 시작 전 로비
 def StartPage():
-    font = pygame.font.Font(None, 100)
-    image = pygame.image.load(DIRIMG + Sep[0]).convert_alpha()
-
-    screen.fill(black)
-    screen.blit(image, (0, 0)) 
-    pygame.display.flip()
-
+    image = pygame.image.load(DIRIMG + BUTTONSRC + startpage)
+    
+    opty = 255
+    optystt = 5
+    current_time = pygame.time.get_ticks()
+    bg_y = 0
     while True:
+        now_time = pygame.time.get_ticks() - current_time 
+        screen.fill(black)
+        screen.blit(background, (0, bg_y))
+        screen.blit(background, (0, bg_y - size[1]))
+        bg_y += 1
+        
+        if bg_y >= size[1]:
+            bg_y = 0
+            
+        if opty >= 255 or (opty <= 0):
+                optystt *= -1
+
+        opty += optystt
+        image.set_alpha(opty)
+            
+        image_rect = image.get_rect(center=(screen.get_width() // 2, screen.get_height() // 2))
+        screen.blit(image, image_rect)
+        pygame.display.flip()
+        
         for event in pygame.event.get():
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_RETURN:
                     return
-
+        clock.tick(60)
+    
 
 playing = 0
 count = 0
@@ -229,7 +270,7 @@ while True:
             background = pygame.image.load(DIRIMG + stage_img[count // 1000]).convert_alpha()
         STAGE += 1
             
-    background = pygame.transform.scale(background, (500, 1000))
+    background = pygame.transform.scale(background, size)
             
     # 키 입력 확인
     keys = pygame.key.get_pressed()
@@ -387,11 +428,11 @@ while True:
     screen.fill(black)
 
     bg_y += 1
-    if bg_y >= 600:
+    if bg_y >= size[1]:
         bg_y = 0
         
     screen.blit(background, (0, bg_y))
-    screen.blit(background, (0, bg_y - 600))
+    screen.blit(background, (0, bg_y - size[1]))
     player.draw_element()
     
     for i in m_list + a_list + rock_list + item_list + bm_list + boss_list + hit_effects:
