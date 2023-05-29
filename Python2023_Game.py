@@ -1,8 +1,6 @@
 import pygame
 import random
-import time
 import sys
-from datetime import datetime
 
 
 # 소스 디렉터리
@@ -293,8 +291,6 @@ ditem_list = []
 
 item_speed = 10
 
-# 시작 시
-start_time = datetime.now()
 # 카운트 다운
 StartPage()
 
@@ -344,10 +340,6 @@ while True:
             laser_delay = power
             
 
-        
-    # 입력, 시간에 따른 변화
-    now_time = datetime.now()
-    delta_time = round((now_time - start_time).total_seconds())
 
     
     # 몬스터 생성
@@ -480,7 +472,7 @@ while True:
     text_score = font.render("score : {} ". format(round(score)), True, (255, 255, 0))  
     screen.blit(text_score, (10, 5))
     
-    text_time = font.render("time : {}". format(delta_time), True, (255, 255, 255))
+    text_time = font.render("time : {}". format(round(count / 60)), True, (255, 255, 255))
     screen.blit(text_time, (size[0]-100, 5))
     for bss in boss_list:
         boss_hp = font.render("boss : {} ". format(bss.hp), True, (255, 255, 0))  
