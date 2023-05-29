@@ -421,7 +421,7 @@ while True:
     
     # 이펙트 제거
     hit_effects = [i for i in hit_effects if count <= i.end_time]
-    score += sum(i.monster_type * 2 * STAGE for i in a_list if i.hp <= 0)
+    score += sum((i.monster_type + 1) * 2 * STAGE for i in a_list if i.hp <= 0)
     a_list = [monster for monster in a_list if monster.hp > 0]
     score += sum(100 for bss in boss_list if bss.hp <= 0)
     boss_list = [bss for bss in boss_list if bss.hp > 0]
