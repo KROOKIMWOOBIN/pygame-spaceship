@@ -32,7 +32,7 @@ clock = pygame.time.Clock() # FPS를 위한 변수
 
 
 gun_sound = pygame.mixer.Sound(DIRSRC + "gun.mp3")
-font = pygame.font.Font(DIRSRC + "GulimChe-02.ttf", 20)
+font = pygame.font.Font(DIRSRC + "PretendardVariable.ttf", 20)
 
 black = (0,0,0)
 STAGE = 1
@@ -53,6 +53,8 @@ obstacle_size = [100, 100]
 obstacle_speed = 5
 
 hit_effect_size = [35, 35]
+
+a_list = []
 
 
 class Element:
@@ -86,9 +88,19 @@ class Element:
             self.image = pygame.transform.scale(self.image, monster_size)
             self.rect = self.image.get_rect()
             self.rect.width = monster_size[0]
-            self.rect.height = monster_size[1]            
-            self.rect.x = random.randrange(0, size[0] - monster_size[0])
-            self.rect.y = random.randrange(size[1] * -1, -monster_size[1])
+            self.rect.height = monster_size[1]
+            
+            while True:
+                rp = True
+                self.rect.x = random.randrange(0, size[0] - monster_size[0])
+                self.rect.y = random.randrange(size[1] * -1, -monster_size[1])
+                for i in a_list + rock_list:
+                    if self.rect.colliderect(i):
+                        rp = False
+                        break
+                if rp:
+                    break
+            
             self.hp = self.monster_type * 2 + 1
             speed = STAGE + 5
             if speed > 15:
@@ -102,7 +114,7 @@ class Element:
             self.rect.height = boss_size[1]
             self.rect.x = self.x
             self.rect.y = self.y
-            self.hp = 100 * STAGE
+            self.hp = 33 * STAGE
         elif name == "laser":
             self.image = pygame.image.load(DIRIMG + self.laser_img[0])
             self.image = pygame.transform.scale(self.image, laser_size)
@@ -121,8 +133,18 @@ class Element:
             self.image = pygame.image.load(DIRIMG + random.choice(self.obstacle_img))
             self.image = pygame.transform.scale(self.image, obstacle_size)
             self.rect = self.image.get_rect()
-            self.rect.x = random.randrange(0, size[0] - obstacle_size[0])
-            self.rect.y = -obstacle_size[1]
+
+            while True:
+                rp = True
+                self.rect.x = random.randrange(0, size[0] - obstacle_size[0])
+                self.rect.y = -obstacle_size[1]
+                for i in a_list:
+                    if self.rect.colliderect(i):
+                        rp = False
+                        break
+                if rp:
+                    break
+            
             self.hp = 10000
         elif name == "hit_effect":
             self.image = pygame.image.load(DIRIMG + "hit_effect.png")
@@ -144,6 +166,14 @@ class Element:
         
 # 게임 종료 후 로비
 def EndPage():
+    font = pygame.font.Font(DIRSRC + "PretendardVariable.ttf", 56)
+    font.set_bold(True)
+    text = font.render("SCORE". format(round(score)), True, (255, 255, 255))  
+    text_score = font.render("{}". format(round(score)), True, (255, 255, 255))  
+    text_score_rect = text_score.get_rect(center=(screen.get_width() // 2, screen.get_height() // 2))
+    text_rect = text.get_rect(center=(screen.get_width() // 2, screen.get_height() // 2 - 100))
+
+    
     imglist = 1
     current_time = pygame.time.get_ticks()
     stt = 1
@@ -156,6 +186,10 @@ def EndPage():
         screen.fill(black)
         screen.blit(background, (0, bg_y))
         screen.blit(background, (0, bg_y - size[1]))
+        
+        screen.blit(text_score, text_score_rect)
+        screen.blit(text, text_rect)
+        
         bg_y += 1
         if bg_y >= size[1]:
             bg_y = 0
@@ -227,9 +261,9 @@ player.load("player")
 score = 0
 loss = 0
 # 몬스터 설정 
-a_list = [] # 생성된 몬스터
+
 a_size = [60, 60] # 몬스터 크기
-monster_count = 10
+monster_count = 8
 
 
 # 총알
@@ -239,7 +273,7 @@ laser_delay = 0
 item_list = [] # 아이템
 bm_list = [] # 보스 총알
 hit_effects = []  # 피격 효과 객체를 저장할 리스트 생성
-laser_size = [6, 36]
+laser_size = [10 / 1.6, 60 / 1.6]
 
 # 운석
 rockimg = ['rock1.png', 'rock2.png']
@@ -334,8 +368,8 @@ while True:
             boss_laser = Element(boss.rect.x + boss.rect.width / 2 - laser_size[0] * 3 / 2, boss.rect.y)
             boss_laser.load("laser")
             boss_laser.image = pygame.transform.scale(boss_laser.image, [i * 3 for i in laser_size])
-            boss_laser.rect.width = laser_size[0] * 3
-            boss_laser.rect.height = laser_size[1] * 3   
+            boss_laser.rect.width = laser_size[0]
+            boss_laser.rect.height = laser_size[1]
             bm_list.append(boss_laser)
 
     # 보스 레이저 화면 밖으로 나갔을 때
@@ -349,7 +383,6 @@ while True:
     if count == 1000 : # 보스 생성시간 수정해야 됨
         boss = Element(size[0] / 2, 40)
         boss.load("boss")
-        boss.hp = 100
         boss_list.append(boss)
     
     
@@ -393,8 +426,9 @@ while True:
     
     # 이펙트 제거
     hit_effects = [i for i in hit_effects if count <= i.end_time]
-    score += sum(i.monster_type for i in a_list if i.hp <= 0)
+    score += sum(i.monster_type * 2 * STAGE for i in a_list if i.hp <= 0)
     a_list = [monster for monster in a_list if monster.hp > 0]
+    score += sum(100 for bss in boss_list if bss.hp <= 0)
     boss_list = [bss for bss in boss_list if bss.hp > 0]
 
     
