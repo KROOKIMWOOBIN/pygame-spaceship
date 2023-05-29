@@ -17,7 +17,7 @@ pygame.init()
 size = [450, 800]
 screen = pygame.display.set_mode(size)
 title = "미사일 게임"
-stage_img = ['stage01.png', 'stage02.png']
+stage_img = ['stage01.png', 'stage02.png', 'stage03.png', 'stage04.png', 'stage05.png']
 startpage = 'startpage.png'
 end_message_img = 'endpage'
 end_message_img_size = 5
