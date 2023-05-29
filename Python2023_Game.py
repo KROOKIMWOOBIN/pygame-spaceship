@@ -41,7 +41,7 @@ STAGE = 1
 player_size = [31.5, 54.3]
 player_speed = 10
 
-monster_size = [60, 60]
+monster_size = [40, 40]
 monster_speed = 10
 
 boss_size = [200, 200]
@@ -85,7 +85,7 @@ class Element:
         elif name == "monster" :
             self.monster_type = random.randint(0, len(self.monster_img) - 1)
             self.image = pygame.image.load(DIRIMG + self.monster_img[self.monster_type])
-            self.image = pygame.transform.scale(self.image, monster_size)
+            self.image = pygame.transform.scale(self.image, [i + 10 * self.monster_type for i in monster_size])
             self.rect = self.image.get_rect()
             self.rect.width = monster_size[0]
             self.rect.height = monster_size[1]
@@ -118,6 +118,12 @@ class Element:
         elif name == "laser":
             self.image = pygame.image.load(DIRIMG + self.laser_img[0])
             self.image = pygame.transform.scale(self.image, laser_size)
+            self.rect = self.image.get_rect()
+            self.rect.x = self.x
+            self.rect.y = self.y
+        elif name == "bosslaser":
+            self.image = pygame.image.load(DIRIMG + self.laser_img[0])
+            self.image = pygame.transform.scale(self.image, [i * 3 for i in laser_size])
             self.rect = self.image.get_rect()
             self.rect.x = self.x
             self.rect.y = self.y
@@ -366,10 +372,7 @@ while True:
     for boss in boss_list:
         if count % 100 == 0:
             boss_laser = Element(boss.rect.x + boss.rect.width / 2 - laser_size[0] * 3 / 2, boss.rect.y)
-            boss_laser.load("laser")
-            boss_laser.image = pygame.transform.scale(boss_laser.image, [i * 3 for i in laser_size])
-            boss_laser.rect.width = laser_size[0]
-            boss_laser.rect.height = laser_size[1]
+            boss_laser.load("bosslaser")
             bm_list.append(boss_laser)
 
     # 보스 레이저 화면 밖으로 나갔을 때
