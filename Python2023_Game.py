@@ -257,7 +257,6 @@ def StartPage():
 playing = 0
 count = 0
 item_count = 0 # 아이템 사용 시간
-item_state = "X" # 아이템 상태
 # 아이템 효과
 power = 15 # 총알 속도
 shield = False
@@ -450,15 +449,23 @@ while True:
 
 
     # 아이템 능력 발동     
-    if power == 5 or shield == True:
+    if power == 5 or shield:
         item_count += 1
         
     # 아이템 카운트가 100이 될 때 정상복구
-    if item_count >= 100:
+    if power == 5 and item_count >= 100:
         power = 15
-        shield = False
         item_count = 0
         item_state = "X"
+        
+    if shield:
+        if item_count >= 300:
+            shield = False
+            item_count = 0
+            item_state = "X"
+            player.image.set_alpha(255)
+        else:
+            player.image.set_alpha(100)
 
     # 4-4. 그리기
     screen.fill(black)
@@ -484,8 +491,6 @@ while True:
     for bss in boss_list:
         boss_hp = font.render("boss : {} ". format(bss.hp), True, (255, 255, 0))  
         screen.blit(boss_hp, (size[0]/4, 5))
-    it_time = font.render("아이템 상태 : {}".format(item_state), True, (255, 255, 0))  
-    screen.blit(it_time, (size[0] / 3, 5))
         
     # FPS 설정
     clock.tick(60) # 1초에 60번 while문 반복
@@ -497,6 +502,7 @@ while True:
         screen.fill((0, 0, 0))
         EndPage()
         pygame.quit()
+        break
 
     # 업데이트
     pygame.display.flip()
