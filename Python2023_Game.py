@@ -1,7 +1,5 @@
 import pygame
 import random
-import sys
-
 
 # 소스 디렉터리
 DIRIMG = "img/"
@@ -59,7 +57,7 @@ class Element:
     monster_img = ['monster01.png', 'monster02.png', 'monster03.png']
     laser_img = ['laser01.png']
     boss_img = ['boss01.png']
-    item_img = ['boost_item.png']
+    item_img = ['boost_item.png', '무적.png']
     obstacle_img = ['obstacle01.png', 'obstacle02.png']
     
 
@@ -69,6 +67,7 @@ class Element:
         self.y = y
         self.rect = None
         self.hp = 0
+        self.item_type = ""
         
     def load(self, name=""):
         if name == "player":
@@ -126,7 +125,8 @@ class Element:
             self.rect.x = self.x
             self.rect.y = self.y
         elif name == "item":
-            self.image = pygame.image.load(DIRIMG + self.item_img[0])
+            self.item_type = random.randint(0, len(self.item_img) - 1)
+            self.image = pygame.image.load(DIRIMG + self.item_img[self.item_type])
             self.image = pygame.transform.scale(self.image, item_size)
             self.rect = self.image.get_rect()
             self.rect.width = item_size[0]
@@ -257,7 +257,10 @@ def StartPage():
 playing = 0
 count = 0
 item_count = 0 # 아이템 사용 시간
+item_state = "X" # 아이템 상태
+# 아이템 효과
 power = 15 # 총알 속도
+shield = False
 
 player = Element(0, 0)
 player.load("player")
@@ -338,9 +341,6 @@ while True:
             
             m_list.append(player_laser)
             laser_delay = power
-            
-
-
     
     # 몬스터 생성
     for i in range(monster_count - len(a_list)):
@@ -349,7 +349,7 @@ while True:
         a_list.append(monster)
     
     # 아이템
-    if count % 1000 == 0 :
+    if count % 500 == 0 :
         item = Element(0, 0)
         item.load("item")
         item_list.append(item)
@@ -430,28 +430,35 @@ while True:
                 
     # 비행기 충돌시 게임 종료
     for i in a_list + boss_list + rock_list:
-        if i.rect.colliderect(player.rect):
+        if i.rect.colliderect(player.rect) and shield == False :
             playing = 1
             
             
-    # 아이템 이동 및 충돌 검사 
+    # 아이템 이동 및 충돌 검사 및 능력 부여
     for i in item_list:
         i.rect.y += item_speed
         if i.rect.colliderect(player.rect):
-            power = 10
+            if item.item_type == 0:
+                power = 5
+                item_state = "1초 부스트"
+            elif item.item_type == 1:
+                shield = True
+                item_state = "1초 무적"
             
     # 아이템을 먹으면 아이템 없어지게
     item_list = [i for i in item_list if not i.rect.colliderect(player.rect) and i.rect.y < size[1]]
 
 
-    # 아이템 파워가 10일 때 아이템 카운트 증가     
-    if power == 10 :
+    # 아이템 능력 발동     
+    if power == 5 or shield == True:
         item_count += 1
         
-    # 아이템 카운트가 200이 됐을 때 원래대로 파워가 돌아감
-    if item_count >= 200 :
+    # 아이템 카운트가 100이 될 때 정상복구
+    if item_count >= 100:
         power = 15
+        shield = False
         item_count = 0
+        item_state = "X"
 
     # 4-4. 그리기
     screen.fill(black)
@@ -477,6 +484,8 @@ while True:
     for bss in boss_list:
         boss_hp = font.render("boss : {} ". format(bss.hp), True, (255, 255, 0))  
         screen.blit(boss_hp, (size[0]/4, 5))
+    it_time = font.render("아이템 상태 : {}".format(item_state), True, (255, 255, 0))  
+    screen.blit(it_time, (size[0] / 3, 5))
         
     # FPS 설정
     clock.tick(60) # 1초에 60번 while문 반복
@@ -488,7 +497,6 @@ while True:
         screen.fill((0, 0, 0))
         EndPage()
         pygame.quit()
-        sys.exit()
 
     # 업데이트
     pygame.display.flip()
