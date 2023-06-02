@@ -1,9 +1,5 @@
 import pygame
 import random
-import time
-import sys
-from datetime import datetime
-
 
 # 소스 디렉터리
 DIRIMG = "img/"
@@ -61,7 +57,7 @@ class Element:
     monster_img = ['monster01.png', 'monster02.png', 'monster03.png']
     laser_img = ['laser01.png']
     boss_img = ['boss01.png']
-    item_img = ['boost_item.png']
+    item_img = ['boost_item.png', '무적.png']
     obstacle_img = ['obstacle01.png', 'obstacle02.png']
     
 
@@ -71,6 +67,7 @@ class Element:
         self.y = y
         self.rect = None
         self.hp = 0
+        self.item_type = ""
         
     def load(self, name=""):
         if name == "player":
@@ -128,7 +125,8 @@ class Element:
             self.rect.x = self.x
             self.rect.y = self.y
         elif name == "item":
-            self.image = pygame.image.load(DIRIMG + self.item_img[0])
+            self.item_type = random.randint(0, len(self.item_img) - 1)
+            self.image = pygame.image.load(DIRIMG + self.item_img[self.item_type])
             self.image = pygame.transform.scale(self.image, item_size)
             self.rect = self.image.get_rect()
             self.rect.width = item_size[0]
@@ -259,7 +257,9 @@ def StartPage():
 playing = 0
 count = 0
 item_count = 0 # 아이템 사용 시간
+# 아이템 효과
 power = 15 # 총알 속도
+shield = False
 
 player = Element(0, 0)
 player.load("player")
@@ -293,8 +293,6 @@ ditem_list = []
 
 item_speed = 10
 
-# 시작 시
-start_time = datetime.now()
 # 카운트 다운
 StartPage()
 
@@ -342,13 +340,6 @@ while True:
             
             m_list.append(player_laser)
             laser_delay = power
-            
-
-        
-    # 입력, 시간에 따른 변화
-    now_time = datetime.now()
-    delta_time = round((now_time - start_time).total_seconds())
-
     
     # 몬스터 생성
     for i in range(monster_count - len(a_list)):
@@ -357,7 +348,7 @@ while True:
         a_list.append(monster)
     
     # 아이템
-    if count % 1000 == 0 :
+    if count % 500 == 0 :
         item = Element(0, 0)
         item.load("item")
         item_list.append(item)
@@ -429,7 +420,7 @@ while True:
     
     # 이펙트 제거
     hit_effects = [i for i in hit_effects if count <= i.end_time]
-    score += sum(i.monster_type * 2 * STAGE for i in a_list if i.hp <= 0)
+    score += sum((i.monster_type + 1) * 2 * STAGE for i in a_list if i.hp <= 0)
     a_list = [monster for monster in a_list if monster.hp > 0]
     score += sum(100 for bss in boss_list if bss.hp <= 0)
     boss_list = [bss for bss in boss_list if bss.hp > 0]
@@ -438,28 +429,43 @@ while True:
                 
     # 비행기 충돌시 게임 종료
     for i in a_list + boss_list + rock_list:
-        if i.rect.colliderect(player.rect):
+        if i.rect.colliderect(player.rect) and shield == False :
             playing = 1
             
             
-    # 아이템 이동 및 충돌 검사 
+    # 아이템 이동 및 충돌 검사 및 능력 부여
     for i in item_list:
         i.rect.y += item_speed
         if i.rect.colliderect(player.rect):
-            power = 10
+            if item.item_type == 0:
+                power = 5
+                item_state = "1초 부스트"
+            elif item.item_type == 1:
+                shield = True
+                item_state = "1초 무적"
             
     # 아이템을 먹으면 아이템 없어지게
     item_list = [i for i in item_list if not i.rect.colliderect(player.rect) and i.rect.y < size[1]]
 
 
-    # 아이템 파워가 10일 때 아이템 카운트 증가     
-    if power == 10 :
+    # 아이템 능력 발동     
+    if power == 5 or shield:
         item_count += 1
         
-    # 아이템 카운트가 200이 됐을 때 원래대로 파워가 돌아감
-    if item_count >= 200 :
+    # 아이템 카운트가 100이 될 때 정상복구
+    if power == 5 and item_count >= 100:
         power = 15
         item_count = 0
+        item_state = "X"
+        
+    if shield:
+        if item_count >= 300:
+            shield = False
+            item_count = 0
+            item_state = "X"
+            player.image.set_alpha(255)
+        else:
+            player.image.set_alpha(100)
 
     # 4-4. 그리기
     screen.fill(black)
@@ -480,7 +486,7 @@ while True:
     text_score = font.render("score : {} ". format(round(score)), True, (255, 255, 0))  
     screen.blit(text_score, (10, 5))
     
-    text_time = font.render("time : {}". format(delta_time), True, (255, 255, 255))
+    text_time = font.render("time : {}". format(round(count / 60)), True, (255, 255, 255))
     screen.blit(text_time, (size[0]-100, 5))
     for bss in boss_list:
         boss_hp = font.render("boss : {} ". format(bss.hp), True, (255, 255, 0))  
@@ -496,7 +502,7 @@ while True:
         screen.fill((0, 0, 0))
         EndPage()
         pygame.quit()
-        sys.exit()
+        break
 
     # 업데이트
     pygame.display.flip()
