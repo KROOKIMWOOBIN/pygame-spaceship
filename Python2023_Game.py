@@ -356,8 +356,7 @@ while True:
     # 보스 레이저 이동
     for i in bm_list: 
         i.rect.y += 10
-        if i.rect.colliderect(player.rect):
-            playing = 1
+        
 
     # 보스 레이저 발사
     for boss in boss_list:
@@ -390,10 +389,7 @@ while True:
     rock_list = [rock for rock in rock_list if rock.rect.y + obstacle_speed < size[1]]
     for rock in rock_list:
         rock.rect.y += obstacle_speed
-
-        for bm in bm_list:
-            if (bm.rect.colliderect(player.rect)):
-                playing = 1
+                
                 
     # 몬스터 이동
     a_list = [monster for monster in a_list if monster.rect.y + monster_speed < size[1]]
@@ -428,7 +424,7 @@ while True:
     
                 
     # 비행기 충돌시 게임 종료
-    for i in a_list + boss_list + rock_list:
+    for i in a_list + boss_list + rock_list + bm_list:
         if i.rect.colliderect(player.rect) and shield == False :
             playing = 1
             
